@@ -449,8 +449,8 @@
       <div class="map-container" id="mapContainer">
         <div class="map-card">
           <div class="map-header">
-            <h2>✅ Your Location Added!</h2>
-            <p>You're now on Chercy's travel map</p>
+            <h2>🌍 Chercy's European Adventure Map</h2>
+            <p>See where friends are located across Europe</p>
           </div>
           <div id="map"></div>
         </div>
@@ -845,6 +845,12 @@
 
           // Reload friends data
           await loadFriends();
+
+          // Update map header to show success
+          const mapHeader = document.querySelector(".map-header h2");
+          const mapSubtext = document.querySelector(".map-header p");
+          if (mapHeader) mapHeader.textContent = "✅ Your Location Added!";
+          if (mapSubtext) mapSubtext.textContent = "You're now on Chercy's travel map";
 
           // Show map and friends section
           mapContainer.classList.add("show");
