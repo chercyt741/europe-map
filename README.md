@@ -3,7 +3,7 @@
 Hey! I'm planning my European trip and need your help! 
 
 Please add your location on my trip planner:
-🗺️ https://europe-map.up.railway.app/
+🗺️ https://chercy-europe-map.up.railway.app/
 
 Just enter:
 - Your name
