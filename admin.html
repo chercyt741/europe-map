@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chercy's Backstage - European Trip Admin</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(180deg, #e8f4f8 0%, #f0f8e8 100%);
+        min-height: 100vh;
+        color: #2d3748;
+        padding: 40px 20px;
+      }
+
+      .backstage-container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .backstage-header {
+        text-align: center;
+        margin-bottom: 40px;
+        animation: fadeInDown 0.8s ease-out;
+      }
+
+      .backstage-header h1 {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+      }
+
+      .backstage-header p {
+        color: #718096;
+        font-size: 1.1rem;
+      }
+
+      .admin-card {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+      }
+
+      .admin-header {
+        text-align: center;
+        padding: 30px 25px 25px 25px;
+        border-bottom: 2px solid #e2e8f0;
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .admin-header h2 {
+        color: #2d3748;
+        font-size: 1.4rem;
+        margin-bottom: 8px;
+      }
+
+      .admin-header p {
+        color: #718096;
+        font-size: 14px;
+        margin: 0;
+      }
+
+      .admin-content {
+        padding: 25px;
+      }
+
+      .admin-section {
+        margin-bottom: 30px;
+      }
+
+      .admin-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .admin-section h3 {
+        color: #4a5568;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .admin-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .admin-btn {
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .admin-btn.primary {
+        background: #4dd0e1;
+        color: white;
+      }
+
+      .admin-btn.primary:hover {
+        background: #26c6da;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(77, 208, 225, 0.3);
+      }
+
+      .admin-btn.secondary {
+        background: #f7fafc;
+        color: #4a5568;
+        border: 1px solid #e2e8f0;
+      }
+
+      .admin-btn.secondary:hover {
+        background: #edf2f7;
+        transform: translateY(-1px);
+      }
+
+      .admin-btn:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .admin-friend-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+      }
+
+      .admin-friend-item:hover {
+        background: #edf2f7;
+        transform: translateX(3px);
+      }
+
+      .admin-friend-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+      }
+
+      .admin-friend-avatar {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+
+      .admin-friend-details {
+        flex: 1;
+      }
+
+      .admin-friend-name {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 3px;
+      }
+
+      .admin-friend-location {
+        color: #718096;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+
+      .admin-friend-notes {
+        color: #4a5568;
+        font-style: italic;
+        font-size: 11px;
+        background: rgba(77, 208, 225, 0.1);
+        padding: 6px 10px;
+        border-radius: 8px;
+        border-left: 3px solid #4dd0e1;
+        margin-top: 5px;
+      }
+
+      .admin-friend-recommendations {
+        color: #667eea;
+        font-style: normal;
+        font-size: 11px;
+        background: rgba(102, 126, 234, 0.1);
+        padding: 6px 10px;
+        border-radius: 8px;
+        border-left: 3px solid #667eea;
+        margin-top: 5px;
+      }
+
+      .admin-remove-btn {
+        background: #fed7d7;
+        color: #c53030;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .admin-remove-btn:hover {
+        background: #feb2b2;
+        transform: scale(1.05);
+      }
+
+      .route-summary {
+        background: #f0f8ff;
+        padding: 18px;
+        border-radius: 12px;
+        border-left: 4px solid #4dd0e1;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .route-item {
+        margin: 12px 0;
+        padding: 12px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .route-number {
+        display: inline-block;
+        background: #4dd0e1;
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 20px;
+        font-weight: bold;
+        font-size: 11px;
+        margin-right: 10px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #718096;
+      }
+
+      .empty-state p {
+        font-size: 14px;
+        margin: 10px 0 0 0;
+      }
+
+      .map-section {
+        margin: 30px 0;
+      }
+
+      .map-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+      }
+
+      .map-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #e2e8f0;
+        background: rgba(255, 255, 255, 0.8);
+        text-align: center;
+      }
+
+      .map-header h2 {
+        color: #2d3748;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      #map {
+        height: 400px;
+        width: 100%;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 25px;
+      }
+
+      .stat-card {
+        background: #f8fafc;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+      }
+
+      .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4dd0e1;
+        margin-bottom: 5px;
+      }
+
+      .stat-label {
+        color: #718096;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .loading {
+        text-align: center;
+        color: #718096;
+        padding: 20px;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .backstage-header h1 {
+          font-size: 2rem;
+        }
+
+        .admin-card {
+          margin: 0 10px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .map-container {
+          margin: 0 10px;
+        }
+
+        .admin-actions {
+          gap: 10px;
+        }
+
+        .admin-friend-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .admin-remove-btn {
+          align-self: flex-end;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="backstage-container">
+      <div class="backstage-header">
+        <h1>🎭 Chercy's Backstage</h1>
+        <p>Your private control panel for the European adventure</p>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-header">
+          <h2>🎭 Backstage Control Panel</h2>
+          <p>Hey Chercy! This is your private area to manage your trip.</p>
+        </div>
+
+        <div class="admin-content">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="totalFriends">-</div>
+              <div class="stat-label">Friends Joined</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="notesCount">-</div>
+              <div class="stat-label">Private Notes</div>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>
+              👥 Friends Management (<span id="adminFriendCount">0</span>)
+            </h3>
+            <div id="adminFriendsList">
+              <div class="loading">
+                <p>Loading friends...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>🗺️ Route Planning</h3>
+            <div class="admin-actions">
+              <button
+                class="admin-btn primary"
+                id="adminRouteBtn"
+                onclick="generateRoute()"
+              >
+                🚀 Generate My Route
+              </button>
+              <button class="admin-btn secondary" onclick="clearAllMarkers()">
+                🗑️ Clear All Locations
+              </button>
+              <button class="admin-btn secondary" onclick="exportData()">
+                📥 Export Friend Data
+              </button>
+            </div>
+          </div>
+
+          <div class="admin-section" id="routeDetails" style="display: none">
+            <h3>📍 Current Route</h3>
+            <div id="routeInfo"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-container">
+          <div class="map-header">
+            <h2>🗺️ Friends Around Europe</h2>
+          </div>
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      let map;
+      let friends = [];
+      let markers = [];
+      let leafletLoaded = false;
+
+      // Wait for Leaflet to load
+      function waitForLeaflet() {
+        return new Promise((resolve) => {
+          if (typeof L !== "undefined") {
+            leafletLoaded = true;
+            resolve();
+          } else {
+            setTimeout(() => waitForLeaflet().then(resolve), 100);
+          }
+        });
+      }
+
+      // Initialize map
+      async function initMap() {
+        try {
+          await waitForLeaflet();
+
+          map = L.map("map", {
+            preferCanvas: true,
+            zoomControl: true,
+            attributionControl: true,
+          }).setView([50.0755, 14.4378], 4);
+
+          L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 18,
+            attribution: "© OpenStreetMap contributors",
+            detectRetina: true,
+            updateWhenIdle: true,
+            keepBuffer: 2,
+          }).addTo(map);
+        } catch (error) {
+          console.error("Error initializing map:", error);
+        }
+      }
+
+      // Add marker to map
+      function addMarkerToMap(friend) {
+        try {
+          if (!leafletLoaded || typeof L === "undefined" || !map) {
+            return;
+          }
+
+          const marker = L.marker([friend.coords.lat, friend.coords.lng]).addTo(
+            map
+          ).bindPopup(`
+                        <div style="text-align: center; padding: 15px; min-width: 200px;">
+                            <h3 style="margin: 0 0 8px 0; color: #2d3748; font-size: 16px;">${
+                              friend.name
+                            }</h3>
+                            <p style="margin: 0 0 8px 0; color: #718096; font-size: 13px;">📍 ${
+                              friend.location
+                            }</p>
+                            ${
+                              friend.notes
+                                ? `<div style="background: #f0f8ff; padding: 10px; border-radius: 8px; border-left: 3px solid #4dd0e1; text-align: left; font-size: 12px; margin-top: 8px;"><strong>💡 Notes:</strong><br>"${friend.notes}"</div>`
+                                : ""
+                            }
+                            ${
+                              friend.otherCities
+                                ? `<div style="background: #f0f4ff; padding: 10px; border-radius: 8px; border-left: 3px solid #667eea; text-align: left; font-size: 12px; margin-top: 8px;"><strong>🏙️ Recommends:</strong><br>${friend.otherCities}</div>`
+                                : ""
+                            }
+                        </div>
+                    `);
+
+          markers.push(marker);
+        } catch (error) {
+          console.error("Error adding marker:", error);
+        }
+      }
+
+      // Load friends from database
+      async function loadFriends() {
+        try {
+          const response = await fetch("/api/friends");
+          if (!response.ok) {
+            throw new Error("Failed to load friends");
+          }
+
+          friends = await response.json();
+
+          // Initialize map
+          await initMap();
+
+          // Add markers for all friends
+          friends.forEach((friend) => addMarkerToMap(friend));
+          updateAdminPanel();
+
+          // Fit map to show all markers
+          if (markers.length > 0) {
+            setTimeout(() => {
+              const group = new L.featureGroup(markers);
+              map.fitBounds(group.getBounds().pad(0.1));
+            }, 500);
+          }
+        } catch (error) {
+          console.error("Error loading friends:", error);
+          await initMap();
+          updateAdminPanel();
+        }
+      }
+
+      // Load stats from database
+      async function loadStats() {
+        try {
+          const response = await fetch("/api/stats");
+          if (!response.ok) {
+            throw new Error("Failed to load stats");
+          }
+
+          const stats = await response.json();
+          document.getElementById("totalFriends").textContent =
+            stats.totalFriends;
+          document.getElementById("notesCount").textContent =
+            stats.friendsWithNotes;
+        } catch (error) {
+          console.error("Error loading stats:", error);
+          document.getElementById("totalFriends").textContent = "0";
+          document.getElementById("notesCount").textContent = "0";
+        }
+      }
+
+      // Update admin panel
+      function updateAdminPanel() {
+        const adminFriendsList = document.getElementById("adminFriendsList");
+        const adminFriendCount = document.getElementById("adminFriendCount");
+
+        adminFriendCount.textContent = friends.length;
+
+        if (friends.length === 0) {
+          adminFriendsList.innerHTML = `
+                    <div class="empty-state">
+                        <p>No friends have joined yet!</p>
+                    </div>
+                `;
+          return;
+        }
+
+        adminFriendsList.innerHTML = friends
+          .map(
+            (friend) => `
+                <div class="admin-friend-item">
+                    <div class="admin-friend-info">
+                        <div class="admin-friend-avatar">${friend.name
+                          .charAt(0)
+                          .toUpperCase()}</div>
+                        <div class="admin-friend-details">
+                            <div class="admin-friend-name">${friend.name}</div>
+                            <div class="admin-friend-location">📍 ${
+                              friend.location
+                            }</div>
+                            ${
+                              friend.notes
+                                ? `<div class="admin-friend-notes">💡 "${friend.notes}"</div>`
+                                : '<div style="color: #a0aec0; font-size: 11px; font-style: italic;">No notes provided</div>'
+                            }
+                            ${
+                              friend.otherCities
+                                ? `<div class="admin-friend-recommendations">🏙️ Recommends: ${friend.otherCities}</div>`
+                                : ""
+                            }
+                        </div>
+                    </div>
+                    <button class="admin-remove-btn" onclick="removeFriend(${
+                      friend.id
+                    })">Remove</button>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      // Remove friend
+      async function removeFriend(id) {
+        if (
+          !confirm(
+            "Are you sure you want to remove this friend from your trip?"
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/friends/${id}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to remove friend");
+          }
+
+          // Reload data
+          await loadFriends();
+          await loadStats();
+        } catch (error) {
+          console.error("Error removing friend:", error);
+          alert("Error removing friend. Please try again.");
+        }
+      }
+
+      // Clear all markers
+      async function clearAllMarkers() {
+        if (
+          !confirm(
+            "Are you sure you want to remove ALL friend locations? This cannot be undone."
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/friends", {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to clear friends");
+          }
+
+          // Clear local data
+          markers.forEach((marker) => {
+            if (map && marker) {
+              map.removeLayer(marker);
+            }
+          });
+          markers = [];
+          friends = [];
+          updateAdminPanel();
+          document.getElementById("routeDetails").style.display = "none";
+          await loadStats();
+        } catch (error) {
+          console.error("Error clearing friends:", error);
+          alert("Error clearing friends. Please try again.");
+        }
+      }
+
+      // Export data
+      function exportData() {
+        const data = {
+          tripPlanner: "Chercy's European Adventure",
+          friends: friends.map((friend) => ({
+            name: friend.name,
+            location: friend.location,
+            notes: friend.notes,
+            otherCities: friend.otherCities,
+            coordinates: friend.coords,
+            addedDate: friend.timestamp,
+          })),
+          exportDate: new Date().toISOString(),
+          totalFriends: friends.length,
+          stats: {
+            friendsWithNotes: friends.filter((f) => f.notes).length,
+            friendsWithRecommendations: friends.filter((f) => f.otherCities)
+              .length,
+            countries: new Set(
+              friends.map((f) => f.location.split(",").pop()?.trim())
+            ).size,
+          },
+        };
+
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: "application/json" });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `chercy-europe-trip-${
+          new Date().toISOString().split("T")[0]
+        }.json`;
+        link.click();
+      }
+
+      // Generate route
+      function generateRoute() {
+        if (friends.length < 2) {
+          alert(
+            "Need at least 2 friends marked on the map to generate a travel route!"
+          );
+          return;
+        }
+
+        const sortedFriends = [...friends].sort(
+          (a, b) => a.coords.lng - b.coords.lng
+        );
+        const waypoints = sortedFriends.map((friend) =>
+          L.latLng(friend.coords.lat, friend.coords.lng)
+        );
+
+        // Clear existing routes
+        map.eachLayer((layer) => {
+          if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
+            map.removeLayer(layer);
+          }
+        });
+
+        const routeLine = L.polyline(waypoints, {
+          color: "#4dd0e1",
+          weight: 4,
+          opacity: 0.8,
+          dashArray: "10, 10",
+        }).addTo(map);
+
+        // Show route in admin panel
+        const routeDetails = document.getElementById("routeDetails");
+        const routeInfo = document.getElementById("routeInfo");
+
+        routeInfo.innerHTML = `
+                <div class="route-summary">
+                    <strong>🗺️ Your Optimized Route (West → East):</strong><br><br>
+                    ${sortedFriends
+                      .map(
+                        (friend, index) =>
+                          `<div class="route-item">
+                            <span class="route-number">${index + 1}</span>
+                            <strong>${friend.name}</strong> in ${
+                            friend.location
+                          }
+                            ${
+                              friend.notes
+                                ? `<br><div style="margin-top: 5px; color: #718096; font-size: 12px;">💡 ${friend.notes}</div>`
+                                : ""
+                            }
+                            ${
+                              friend.otherCities
+                                ? `<br><div style="margin-top: 5px; color: #667eea; font-size: 12px;">🏙️ Also visit: ${friend.otherCities}</div>`
+                                : ""
+                            }
+                        </div>`
+                      )
+                      .join("")}
+                    <br>
+                    <div style="background: #e6fffa; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 12px;">
+                        <strong>🎯 Trip Summary:</strong><br>
+                        • ${sortedFriends.length} stops across Europe<br>
+                        • ${
+                          sortedFriends.filter((f) => f.notes).length
+                        } friends provided travel tips<br>
+                        • ${
+                          sortedFriends.filter((f) => f.otherCities).length
+                        } friends recommended additional cities<br>
+                        • Route optimized West → East for efficient travel<br>
+                        • Consider train connections between cities
+                    </div>
+                </div>
+            `;
+        routeDetails.style.display = "block";
+
+        map.fitBounds(routeLine.getBounds().pad(0.1));
+      }
+
+      // Initialize when page loads
+      document.addEventListener("DOMContentLoaded", async function () {
+        await Promise.all([loadFriends(), loadStats()]);
+      });
+
+      // Auto-refresh data every 30 seconds
+      setInterval(async () => {
+        await Promise.all([loadFriends(), loadStats()]);
+      }, 30000);
+    </script>
+  </body>
+</html>
